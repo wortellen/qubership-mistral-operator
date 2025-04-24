@@ -156,8 +156,10 @@ Postgres password for Mistral.
 {{- define "mistral.pgPass" -}}
   {{- if and (ne (.Values.INFRA_POSTGRES_MISTRAL_PASSWORD | toString) "<nil>") .Values.mistral.cloudIntegrationEnabled -}}
     {{- .Values.INFRA_POSTGRES_MISTRAL_PASSWORD }}
+  {{- else if and (.Values.secrets.pgPassword) (ne (.Values.secrets.pgPassword | toString) "") -}}
+    {{- .Values.secrets.pgPassword }}
   {{- else -}}
-    {{- .Values.secrets.pgPassword -}}
+    {{- printf "mistral_nc" }}
   {{- end -}}
 {{- end -}}
 
@@ -429,4 +431,22 @@ Monitor mistral images for deployments in open source (returns empty string).
 */}}
 {{- define "mistral.monitoredImages" -}}
   ""
+{{- end -}}
+
+{{/*
+Whether Disaster recovery TLS enabled
+*/}}
+{{- define "disasterRecovery.enableTls" -}}
+  {{- and .Values.mistral.tls.enabled .Values.mistral.tls.services.disasterRecovery.enabled -}}
+{{- end -}}
+
+{{/*
+Protocol for DRD
+*/}}
+{{- define "disasterRecovery.protocol" -}}
+{{- if eq (include "disasterRecovery.enableTls" .) "true" -}}
+  {{- "https://" -}}
+{{- else -}}
+  {{- "http://" -}}
+{{- end -}}
 {{- end -}}
